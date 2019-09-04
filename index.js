@@ -32,18 +32,48 @@ app.get('/import-mpn', async (req, res) => {
 			page.click('#loginsub'),
 			page.waitForNavigation({ waitUntil: 'networkidle0' })
 		])
-		const li1 = await page.$('#smoothmenu1 > ul > li:nth-child(2)')
-		await li1.hover()
-		const li2 = li1.$('ul > li:nth-child(3)')
-		await li2.hover()
-		// await page.click('#mpnharianrekon')
-		// await page.waitFor('#dd_map')
-		// await page.evaluate(() => document.querySelector('#tgl_akhir').value = 31)
-		// await page.click('#btndownload')
-		// await page.waitForResponse('https://appportal/portal/mpnharianrekon/download.php')
-		// console.log('test')
-	} catch (err) {
-		console.log(err)
+		await page.evaluate(() => document.querySelector('#mpnharianrekon').click())
+		await page.waitFor('#dd_map')
+
+		await page.evaluate(() => document.querySelector('#tgl_akhir').value = 31)
+		await page.click('#btndownload')
+		const urls = await page.evaluate(() => {
+			const kpps = [...document.querySelectorAll('#dd_nas_kpp > option')]
+				.map(opt => opt.value)
+			console.log('kpps.length', kpps.length)
+			const months = [...document.querySelectorAll('#bln_awal > option')]
+				.map(opt => opt.value)
+			console.log('months.length', months.length)
+			const valutas = [...document.querySelectorAll('#valuta > option')]
+				.map(opt => opt.value)
+			console.log('valutas.length', valutas.length)
+			
+			let datas = []
+			for(let i = 0; i < kpps.length; i++){
+				for(let j = 0; j < months.length; j++){
+					for(let k = 0; k < valutas.length; k++){
+						datas.push(`https://appportal/portal/download/lsnfjkasbnfjnasjkfnjbnjnjknbkjnfjknbjkfnbkjfnbi3939489184.php?p1=${ kpps[i] }20194111000000131${ months[j] }${ valutas[k] }`)
+						k++
+					}
+					j++
+				}
+				i++
+			}
+			console.log('datas.length', datas.length)
+			return datas
+		})
+		console.log(urls.length)
+		for(let url of urls){
+			const page2 = await browser.newPage()
+			try {
+				await page2.goto(url)
+				page2.close()
+			} catch (err){}
+		}
+		res.json({ ok: 1 })
+	} catch (error) {
+		console.log(error)
+		res.json({ ok: 0, error })
 	}
 })
 
